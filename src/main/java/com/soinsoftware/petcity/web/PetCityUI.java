@@ -77,7 +77,7 @@ public class PetCityUI extends UI {
 	protected void init(VaadinRequest vaadinRequest) {
 		try {
 			PetCityManagerFactory.getInstance();
-			userBll = new UserBll();
+			userBll = UserBll.getInstance();
 			getPage().setTitle("Pet City Software");
 			addStyleName(ValoTheme.UI_WITH_MENU);
 			Responsive.makeResponsive(this);
@@ -200,7 +200,8 @@ public class PetCityUI extends UI {
 		ComponentContainer viewContainer = root.getContentContainer();
 		Navigator navigator = new Navigator(this, viewContainer);
 		navigator.addView(KEY_EVENTS, ReminderLayout.class);
-		navigator.addView(KEY_HISTORIES, View2.class);
+		navigator.addView(KEY_HISTORIES, DefaultView.class);
+		navigator.addView(KEY_COMPANY_DATA, CompanyLayout.class);
 		navigator.setErrorView(DefaultView.class);
 
 		navigator.addViewChangeListener(new ViewChangeListener() {

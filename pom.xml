@@ -72,6 +72,11 @@
 			<version>1.0.0</version>
 			<scope>compile</scope>
 		</dependency>
+		<dependency>
+		    <groupId>org.vaadin.ui</groupId>
+		    <artifactId>numberfield</artifactId>
+		    <version>0.2.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>
