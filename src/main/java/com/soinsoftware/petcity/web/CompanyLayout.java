@@ -1,27 +1,20 @@
 package com.soinsoftware.petcity.web;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.math.BigInteger;
 
 import org.apache.log4j.Logger;
-import org.springframework.util.StreamUtils;
 import org.vaadin.ui.NumberField;
 
 import com.soinsoftware.petcity.bll.CompanyBll;
 import com.soinsoftware.petcity.model.Company;
 import com.soinsoftware.petcity.model.User;
+import com.soinsoftware.petcity.util.ImageUploader;
+import com.soinsoftware.petcity.util.StreamResourceUtil;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener.ViewChangeEvent;
-import com.vaadin.server.FileResource;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Page;
-import com.vaadin.server.StreamResource;
-import com.vaadin.server.StreamResource.StreamSource;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Image;
@@ -30,9 +23,6 @@ import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.Upload;
-import com.vaadin.ui.Upload.Receiver;
-import com.vaadin.ui.Upload.SucceededEvent;
-import com.vaadin.ui.Upload.SucceededListener;
 import com.vaadin.ui.VerticalLayout;
 
 @SuppressWarnings("deprecation")
@@ -58,16 +48,7 @@ public class CompanyLayout extends VerticalLayout implements View {
 		
 		Button saveButton = new Button("Guardar", FontAwesome.SAVE);
 		saveButton.addStyleName("primary");
-		saveButton.addClickListener(e -> {
-			try {
-				save();
-			} catch (IOException ex) {
-				new Notification("Los datos de la veterinaria no pudieron ser actualizados, contacte al desarrollador (3007200405)",
-						Notification.Type.ERROR_MESSAGE)
-					.show(Page.getCurrent());
-				log.error(ex);
-			}
-		});
+		saveButton.addClickListener(e -> save());
 		
 		HorizontalLayout buttonLayout = new HorizontalLayout();
 		buttonLayout.setSpacing(true);
@@ -87,7 +68,7 @@ public class CompanyLayout extends VerticalLayout implements View {
 	private VerticalLayout buildDataLayout() {
 		imgCompany = new Image();
 		imgCompany.setWidth("30%");
-		ImageUploader receiver = new ImageUploader();
+		ImageUploader receiver = new ImageUploader(imgCompany, false);
 		Upload upload = new Upload("Cambiar el logo", receiver);
 		upload.addSucceededListener(receiver);
 		
@@ -128,68 +109,33 @@ public class CompanyLayout extends VerticalLayout implements View {
         nfInitialHistory.setValue(company.getInitialCustomId().toString());
         nfCurrentHistory.setValue(company.getActualCustomId().toString());
         if (company.getPhotoBlob() != null) {
-        	loadImage(company.getPhotoBlob());
+        	imgCompany.setSource(StreamResourceUtil.loadImage(company.getPhotoBlob()));
         }
 	}
 	
-	private void loadImage(final byte[] imageData) {
-		StreamSource streamSource = new StreamResource.StreamSource() {
-			private static final long serialVersionUID = 6685907115411208560L;
-
-			public InputStream getStream() {
-				return (imageData == null) ? null : new ByteArrayInputStream(imageData);
-			}
-		};
-		imgCompany.setSource(new StreamResource(streamSource, "streamedSourceFromByteArray"));
-	}
-	
-	private void save() throws IOException {
-		User user = getSession().getAttribute(User.class);
-		byte[] photoBlob = null;
-		if (imgCompany.getSource() != null) {
-			if (imgCompany.getSource() instanceof FileResource) {
-				photoBlob = StreamUtils.copyToByteArray(((FileResource) imgCompany.getSource()).getStream().getStream());
-			} else if (imgCompany.getSource() instanceof StreamResource) {
-				photoBlob = StreamUtils.copyToByteArray(((StreamResource) imgCompany.getSource()).getStream().getStream());
-			}
+	private void save() {
+		try {
+			User user = getSession().getAttribute(User.class);
+			byte[] photoBlob = StreamResourceUtil.getByteArray(imgCompany.getSource());
+			BigInteger actualCustomId = new BigInteger(nfCurrentHistory.getValue());
+			BigInteger initialCustomId = new BigInteger(nfInitialHistory.getValue());
+			Company company = Company.builder(user.getCompany())
+				.photoBlob(photoBlob)
+				.actualCustomId(actualCustomId)
+				.initialCustomId(initialCustomId)
+				.build();
+			CompanyBll.getInstance().update(company);
+			
+			user = User.builder(user).company(company).build();
+			getSession().setAttribute(User.class, user);
+			
+			new Notification("Datos actualizados correctamente",Notification.Type.TRAY_NOTIFICATION)
+				.show(Page.getCurrent());
+		} catch (IOException ex) {
+			new Notification("Los datos de la veterinaria no pudieron ser actualizados, contacte al desarrollador (3007200405)",
+					Notification.Type.ERROR_MESSAGE)
+				.show(Page.getCurrent());
+			log.error(ex);
 		}
-		BigInteger actualCustomId = new BigInteger(nfCurrentHistory.getValue());
-		BigInteger initialCustomId = new BigInteger(nfInitialHistory.getValue());
-		Company company = Company.builder(user.getCompany())
-			.photoBlob(photoBlob)
-			.actualCustomId(actualCustomId)
-			.initialCustomId(initialCustomId)
-			.build();
-		CompanyBll.getInstance().update(company);
-		
-		user = User.builder(user).company(company).build();
-		getSession().setAttribute(User.class, user);
-		
-		new Notification("Datos actualizados correctamente",Notification.Type.TRAY_NOTIFICATION)
-			.show(Page.getCurrent());
 	}
-	
-	class ImageUploader implements Receiver, SucceededListener {
-	    
-		private static final long serialVersionUID = -4719012826720515318L;
-		public File file;
-
-	    public OutputStream receiveUpload(String fileName, String mimeType) {
-	    	FileOutputStream fileOutputStream;
-	    	try {
-	    		String[] fileNameSplit = fileName.split("\\.");
-	    		file = File.createTempFile(fileNameSplit[0], fileNameSplit[1]);
-	    		fileOutputStream = new FileOutputStream(file);
-	        }
-	        catch (IOException e) {
-	          new Notification("Could not open file", e.getMessage(), Notification.Type.ERROR_MESSAGE).show(Page.getCurrent());
-	          return null;
-	        }
-	        return fileOutputStream;
-	    }
-
-	    public void uploadSucceeded(SucceededEvent event) {
-	        imgCompany.setSource(new FileResource(file));
-	    }
-	};
 }
