@@ -77,6 +77,11 @@
 		    <artifactId>numberfield</artifactId>
 		    <version>0.2.0</version>
 		</dependency>
+		<dependency>
+		    <groupId>org.vaadin.addon</groupId>
+		    <artifactId>confirmdialog</artifactId>
+		    <version>3.1.1</version>
+		</dependency>
 	</dependencies>
 
 	<build>

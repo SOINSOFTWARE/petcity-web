@@ -202,6 +202,7 @@ public class PetCityUI extends UI {
 		navigator.addView(KEY_EVENTS, ReminderLayout.class);
 		navigator.addView(KEY_HISTORIES, DefaultView.class);
 		navigator.addView(KEY_COMPANY_DATA, CompanyLayout.class);
+		navigator.addView(KEY_PET_TYPE, PetTypeLayout.class);
 		navigator.setErrorView(DefaultView.class);
 
 		navigator.addViewChangeListener(new ViewChangeListener() {
