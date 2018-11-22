@@ -86,7 +86,7 @@ public class PetCityUI extends UI {
 			log.error(e);
 		}
 	}
-	
+
 	private void buildValoMenuLayout() {
 		ValoMenuLayout root = new ValoMenuLayout();
 		CssLayout menu = buildMenu(root);
@@ -108,7 +108,7 @@ public class PetCityUI extends UI {
 		menuItems.put(KEY_VACCINE, VALUE_VACCINE);
 		menuItems.put(KEY_DRENCHING, VALUE_DRENCHING);
 	}
-	
+
 	private void buildMenuIconItems() {
 		menuIconItems.put(KEY_EVENTS, FontAwesome.LIST);
 		menuIconItems.put(KEY_HISTORIES, FontAwesome.AMBULANCE);
@@ -205,6 +205,8 @@ public class PetCityUI extends UI {
 		navigator.addView(KEY_PET_TYPE, PetTypeLayout.class);
 		navigator.addView(KEY_BREED, BreedLayout.class);
 		navigator.addView(KEY_FOOD_BRAND, FoodBrandLayout.class);
+		navigator.addView(KEY_VACCINE, VaccineLayout.class);
+		navigator.addView(KEY_DRENCHING, DrenchingLayout.class);
 		navigator.setErrorView(DefaultView.class);
 
 		navigator.addViewChangeListener(new ViewChangeListener() {
@@ -236,7 +238,7 @@ public class PetCityUI extends UI {
 			}
 		});
 	}
-	
+
 	private void buildUI(User user) {
 		getSession().setAttribute(User.class, user);
 		if (user == null) {
@@ -245,40 +247,40 @@ public class PetCityUI extends UI {
 			buildValoMenuLayout();
 		}
 	}
-	
+
 	private User getUser() {
 		return getSession().getAttribute(User.class);
 	}
-	
+
 	private void buildLoginForm() {
 		VerticalLayout contentLayout = new VerticalLayout();
 		contentLayout.setSizeFull();
-		
+
 		VerticalLayout layout = new VerticalLayout();
 		layout.setWidth("400px");
-		
+
 		TextField txtUsername = new TextField("Usuario");
 		txtUsername.setSizeFull();
 		layout.addComponent(txtUsername);
-		
+
 		PasswordField txtPassword = new PasswordField("Contraseña");
 		txtPassword.setSizeFull();
 		layout.addComponent(txtPassword);
-		
+
 		Button loginButton = new Button("Ingresar", e -> authenticate(txtUsername.getValue(), txtPassword.getValue()));
 		loginButton.setSizeFull();
 		loginButton.addStyleName("friendly");
 		layout.addComponent(loginButton);
-		
+
 		contentLayout.addComponent(layout);
 		contentLayout.setComponentAlignment(layout, Alignment.TOP_CENTER);
-		
+
 		Panel loginPanel = new Panel("<center><h1>Inicio de sesión - Pet City</h1></center>");
 		loginPanel.addStyleName("well");
 		loginPanel.setContent(contentLayout);
 		setContent(loginPanel);
 	}
-	
+
 	private void authenticate(String username, String password) {
 		User user = userBll.select(username, password);
 		if (user == null) {
