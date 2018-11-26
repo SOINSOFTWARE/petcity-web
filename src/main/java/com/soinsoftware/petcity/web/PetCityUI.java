@@ -200,7 +200,7 @@ public class PetCityUI extends UI {
 		ComponentContainer viewContainer = root.getContentContainer();
 		Navigator navigator = new Navigator(this, viewContainer);
 		navigator.addView(KEY_EVENTS, ReminderLayout.class);
-		navigator.addView(KEY_HISTORIES, DefaultView.class);
+		navigator.addView(KEY_HISTORIES, ClinicHistoryLayout.class);
 		navigator.addView(KEY_COMPANY_DATA, CompanyLayout.class);
 		navigator.addView(KEY_PET_TYPE, PetTypeLayout.class);
 		navigator.addView(KEY_BREED, BreedLayout.class);
