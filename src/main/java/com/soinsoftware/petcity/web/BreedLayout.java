@@ -245,7 +245,7 @@ public class BreedLayout extends VerticalLayout implements View {
 
 	private void delete(Breed breed) {
 		breed = Breed.builder(breed).enabled(false).build();
-		bll.update(breed);
+		bll.save(breed);
 		fillGridData();
 		new Notification("Raza borrada", Notification.Type.TRAY_NOTIFICATION).show(Page.getCurrent());
 	}
@@ -264,7 +264,7 @@ public class BreedLayout extends VerticalLayout implements View {
 			} else {
 				breed = Breed.builder(breed).name(name).petType(petType).build();
 				breed.validate();
-				bll.update(breed);
+				bll.save(breed);
 				new Notification("Raza actualizada", Notification.Type.TRAY_NOTIFICATION).show(Page.getCurrent());
 			}
 			buildListView();

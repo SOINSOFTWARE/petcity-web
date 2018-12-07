@@ -124,7 +124,7 @@ public class CompanyLayout extends VerticalLayout implements View {
 				.actualCustomId(actualCustomId)
 				.initialCustomId(initialCustomId)
 				.build();
-			CompanyBll.getInstance().update(company);
+			CompanyBll.getInstance().save(company);
 			
 			user = User.builder(user).company(company).build();
 			getSession().setAttribute(User.class, user);

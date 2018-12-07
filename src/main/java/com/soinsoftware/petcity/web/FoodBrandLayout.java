@@ -199,7 +199,7 @@ public class FoodBrandLayout extends VerticalLayout implements View {
 
 	private void delete(FoodBrand foodBrand) {
 		foodBrand = FoodBrand.builder(foodBrand).enabled(false).build();
-		bll.update(foodBrand);
+		bll.save(foodBrand);
 		fillGridData();
 		new Notification("Alimento borrado", Notification.Type.TRAY_NOTIFICATION).show(Page.getCurrent());
 	}
@@ -216,7 +216,7 @@ public class FoodBrandLayout extends VerticalLayout implements View {
 			} else {
 				foodBrand = FoodBrand.builder(foodBrand).name(name).build();
 				foodBrand.validate();
-				bll.update(foodBrand);
+				bll.save(foodBrand);
 				new Notification("Alimento actualizado", Notification.Type.TRAY_NOTIFICATION).show(Page.getCurrent());
 			}
 			buildListView();

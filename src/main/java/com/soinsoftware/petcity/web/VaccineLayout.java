@@ -201,7 +201,7 @@ public class VaccineLayout extends VerticalLayout implements View {
 
 	private void delete(Vaccine vaccine) {
 		vaccine = Vaccine.builder(vaccine).enabled(false).build();
-		bll.update(vaccine);
+		bll.save(vaccine);
 		fillGridData();
 		new Notification("Vacuna borrada", Notification.Type.TRAY_NOTIFICATION).show(Page.getCurrent());
 	}
@@ -218,7 +218,7 @@ public class VaccineLayout extends VerticalLayout implements View {
 			} else {
 				vaccine = Vaccine.builder(vaccine).name(name).build();
 				vaccine.validate();
-				bll.update(vaccine);
+				bll.save(vaccine);
 				new Notification("Vacuna actualizada", Notification.Type.TRAY_NOTIFICATION).show(Page.getCurrent());
 			}
 			buildListView();

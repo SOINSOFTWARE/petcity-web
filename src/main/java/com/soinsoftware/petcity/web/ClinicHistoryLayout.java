@@ -226,7 +226,7 @@ public class ClinicHistoryLayout extends VerticalLayout implements View {
 
 	private void delete(ClinicHistory clinicHistory) {
 		clinicHistory = ClinicHistory.builder(clinicHistory).enabled(false).build();
-		bll.update(clinicHistory);
+		bll.save(clinicHistory);
 		fillGridData();
 		new Notification("Historia borrada", Notification.Type.TRAY_NOTIFICATION).show(Page.getCurrent());
 	}
@@ -242,7 +242,7 @@ public class ClinicHistoryLayout extends VerticalLayout implements View {
 			} else {
 				clinicHistory = ClinicHistory.builder(clinicHistory).build();
 				clinicHistory.validate();
-				bll.update(clinicHistory);
+				bll.save(clinicHistory);
 				new Notification("Historia actualizada", Notification.Type.TRAY_NOTIFICATION).show(Page.getCurrent());
 			}
 			buildListView();

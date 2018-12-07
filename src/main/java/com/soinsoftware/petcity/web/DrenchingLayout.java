@@ -201,7 +201,7 @@ public class DrenchingLayout extends VerticalLayout implements View {
 
 	private void delete(Drenching drenching) {
 		drenching = Drenching.builder(drenching).enabled(false).build();
-		bll.update(drenching);
+		bll.save(drenching);
 		fillGridData();
 		new Notification("Antiparasitario borrado", Notification.Type.TRAY_NOTIFICATION).show(Page.getCurrent());
 	}
@@ -218,7 +218,7 @@ public class DrenchingLayout extends VerticalLayout implements View {
 			} else {
 				drenching = Drenching.builder(drenching).name(name).build();
 				drenching.validate();
-				bll.update(drenching);
+				bll.save(drenching);
 				new Notification("Antiparasitario actualizado", Notification.Type.TRAY_NOTIFICATION).show(Page.getCurrent());
 			}
 			buildListView();
