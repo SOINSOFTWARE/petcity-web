@@ -4,96 +4,64 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
-import org.vaadin.dialogs.ConfirmDialog;
+import org.vaadin.ui.NumberField;
 
 import com.soinsoftware.petcity.bll.ClinicHistoryBll;
-import com.soinsoftware.petcity.exception.ModelValidationException;
 import com.soinsoftware.petcity.model.ClinicHistory;
 import com.soinsoftware.petcity.model.Company;
 import com.soinsoftware.petcity.model.User;
+import com.soinsoftware.petcity.util.ViewHelper;
 import com.vaadin.data.provider.ConfigurableFilterDataProvider;
 import com.vaadin.data.provider.ListDataProvider;
-import com.vaadin.navigator.View;
-import com.vaadin.navigator.ViewChangeListener.ViewChangeEvent;
-import com.vaadin.server.FontAwesome;
-import com.vaadin.server.Page;
 import com.vaadin.server.SerializablePredicate;
-import com.vaadin.ui.Button;
+import com.vaadin.ui.AbstractOrderedLayout;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Label;
-import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
-import com.vaadin.ui.TabSheet;
-import com.vaadin.ui.TabSheet.Tab;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 
-@SuppressWarnings("deprecation")
-public class ClinicHistoryLayout extends VerticalLayout implements View {
+public class ClinicHistoryLayout extends AbstractEditableLayout<ClinicHistory> {
 
 	private static final long serialVersionUID = -5862329317115273275L;
-	private static final Logger log = Logger.getLogger(ClinicHistoryLayout.class);
+
 	private final ClinicHistoryBll bll;
-	private TabSheet tabSheet;
 	private Grid<ClinicHistory> grid;
-	private TextField txFilterByName;
+	private NumberField txFilterByHistory;
+	private TextField txFilterByPetName;
+	private NumberField txFilterByDocument;
 	private TextField txName;
 	private ConfigurableFilterDataProvider<ClinicHistory, Void, SerializablePredicate<ClinicHistory>> filterDataProvider;
 
 	public ClinicHistoryLayout() throws IOException {
-		super();
+		super("Historias clínicas");
 		bll = ClinicHistoryBll.getInstance();
 	}
 
 	@Override
-	public void enter(ViewChangeEvent event) {
-		View.super.enter(event);
-		setMargin(true);
-		buildListView();
+	protected AbstractOrderedLayout buildListView() {
+		VerticalLayout layout = ViewHelper.buildVerticalLayout(false, false);
+		Panel buttonPanel = buildButtonPanelForLists(true);
+		Panel filterPanel = buildFilterPanel();
+		Panel dataPanel = buildGridPanel();
+		layout.addComponents(buttonPanel, filterPanel, dataPanel);
+		return layout;
 	}
 
-	private void buildListView() {
-		Label h1 = new Label("Historias clínicas");
-		h1.addStyleName("h1");
-		addComponent(h1);
+	@Override
+	protected AbstractOrderedLayout buildEditionView(ClinicHistory clinicHistory) {
+		VerticalLayout layout = ViewHelper.buildVerticalLayout(false, false);
+		Panel buttonPanel = buildButtonPanelForEdition(clinicHistory);
+		Panel dataPanel = buildEditionPanel(clinicHistory);
+		layout.addComponents(buttonPanel, dataPanel);
+		return layout;
+	}
 
-		Button newButton = new Button("Nuevo", FontAwesome.PLUS);
-		newButton.addStyleName("primary");
-		newButton.addClickListener(e -> newClinicHistory());
-
-		Button editButton = new Button("Editar", FontAwesome.EDIT);
-		editButton.addStyleName("friendly");
-		editButton.addClickListener(e -> updateClinicHistory());
-
-		Button deleteButton = new Button("Borrar", FontAwesome.ERASER);
-		deleteButton.addStyleName("danger");
-		deleteButton.addClickListener(e -> deleteClinicHistory());
-
-		HorizontalLayout buttonLayout = new HorizontalLayout();
-		buttonLayout.setSpacing(true);
-		buttonLayout.setMargin(true);
-		buttonLayout.addComponents(newButton, editButton, deleteButton);
-
-		Panel buttonPanel = new Panel(buttonLayout);
-		buttonPanel.addStyleName("well");
-
-		txFilterByName = new TextField("Nombre");
-		txFilterByName.addValueChangeListener(e -> refreshGrid());
-
-		HorizontalLayout filterLayout = new HorizontalLayout();
-		filterLayout.setSpacing(true);
-		filterLayout.setMargin(true);
-		filterLayout.addComponent(txFilterByName);
-
-		Panel filterPanel = new Panel("Filtrar por");
-		filterPanel.setContent(filterLayout);
-		filterPanel.addStyleName("well");
-
-		grid = new Grid<>();
-		fillGridData();
+	@SuppressWarnings("unchecked")
+	@Override
+	protected Panel buildGridPanel() {
+		grid = ViewHelper.buildGrid(SelectionMode.SINGLE);
 		grid.addColumn(ClinicHistory::getRecordCustomId).setCaption("# Historia");
 		grid.addColumn(clinicHistory -> clinicHistory.getPet().getName()).setCaption("Mascota");
 		grid.addColumn(clinicHistory -> clinicHistory.getPet().getPetType().getName()).setCaption("Especie");
@@ -102,64 +70,68 @@ public class ClinicHistoryLayout extends VerticalLayout implements View {
 				+ clinicHistory.getPet().getOwner().getLastName()).setCaption("Propietario");
 		grid.addColumn(clinicHistory -> clinicHistory.getPet().getOwner().getDocument()).setCaption("# Documento");
 		grid.addColumn(clinicHistory -> clinicHistory.getPet().getOwner().getPhone2()).setCaption("# Celular");
-		grid.setSelectionMode(SelectionMode.SINGLE);
-		grid.setSizeFull();
-
-		Panel dataPanel = new Panel(grid);
-		dataPanel.addStyleName("well");
-
-		VerticalLayout listLayout = new VerticalLayout();
-		listLayout.addComponents(buttonPanel, filterPanel, dataPanel);
-
-		tabSheet = new TabSheet();
-		tabSheet.addStyleName("framed");
-		Tab tab = tabSheet.addTab(listLayout, "Listado");
-		tab.setIcon(FontAwesome.LIST);
-
-		addComponent(tabSheet);
+		fillGridData();
+		return ViewHelper.buildPanel(null, grid);
 	}
 
-	private void buildEditionView(ClinicHistory clinicHistory) {
-		Button cancelButton = new Button("Cancelar", FontAwesome.CLOSE);
-		cancelButton.addStyleName("danger");
-		cancelButton.addClickListener(e -> removeEditionTab());
-
-		Button saveButton = new Button("Guardar", FontAwesome.SAVE);
-		saveButton.addStyleName("primary");
-		saveButton.addClickListener(e -> save(clinicHistory));
-
-		HorizontalLayout buttonLayout = new HorizontalLayout();
-		buttonLayout.setSpacing(true);
-		buttonLayout.setMargin(true);
-		buttonLayout.addComponents(cancelButton, saveButton);
-
-		Panel buttonPanel = new Panel(buttonLayout);
-		buttonPanel.addStyleName("well");
-
-		VerticalLayout dataLayout = new VerticalLayout();
-		dataLayout.setWidth("40%");
-		dataLayout.setSpacing(true);
-		dataLayout.setMargin(true);
+	@Override
+	protected Panel buildEditionPanel(ClinicHistory clinicHistory) {
 		txName = new TextField("Nombre");
 		txName.setSizeFull();
-		dataLayout.addComponent(txName);
-
-		Panel dataPanel = new Panel(dataLayout);
-		dataPanel.addStyleName("well");
-
-		VerticalLayout editionLayout = new VerticalLayout();
-		editionLayout.addComponents(buttonPanel, dataPanel);
-		removeEditionTab();
-		Tab tab = tabSheet.addTab(editionLayout, clinicHistory == null ? "Nueva" : buildEditionTabTitle(clinicHistory));
-		tab.setIcon(clinicHistory == null ? FontAwesome.PLUS : FontAwesome.EDIT);
-		tabSheet.setSelectedTab(1);
+		VerticalLayout layout = ViewHelper.buildVerticalLayout(true, true);
+		layout.setWidth("40%");
+		layout.addComponent(txName);
+		return ViewHelper.buildPanel(null, layout);
 	}
 
-	private void fillGridData() {
+	@Override
+	protected void fillGridData() {
 		Company company = getSession().getAttribute(User.class).getCompany();
 		ListDataProvider<ClinicHistory> dataProvider = new ListDataProvider<>(bll.select(company));
 		filterDataProvider = dataProvider.withConfigurableFilter();
 		grid.setDataProvider(filterDataProvider);
+	}
+
+	@Override
+	protected void saveButtonAction(ClinicHistory clinicHistory) {
+		Company company = getSession().getAttribute(User.class).getCompany();
+		String name = txName.getValue();
+		if (clinicHistory == null) {
+			clinicHistory = ClinicHistory.builder().company(company).creation(new Date()).enabled(true).build();
+		} else {
+			clinicHistory = ClinicHistory.builder(clinicHistory).build();
+		}
+		save(bll, clinicHistory, "Historia guardada");
+	}
+
+	@Override
+	protected ClinicHistory getSelected() {
+		ClinicHistory clinicHistory = null;
+		Set<ClinicHistory> clinicHistories = grid.getSelectedItems();
+		if (clinicHistories != null && !clinicHistories.isEmpty()) {
+			clinicHistory = (ClinicHistory) clinicHistories.toArray()[0];
+		}
+		return clinicHistory;
+	}
+
+	@Override
+	protected void delete(ClinicHistory clinicHistory) {
+		clinicHistory = ClinicHistory.builder(clinicHistory).enabled(false).build();
+		save(bll, clinicHistory, "Historia borrada");
+	}
+
+	private Panel buildFilterPanel() {
+		HorizontalLayout layout = ViewHelper.buildHorizontalLayout(true, true);
+		txFilterByHistory = new NumberField("# Historia");
+		txFilterByHistory.setDecimalAllowed(false);
+		txFilterByHistory.addValueChangeListener(e -> refreshGrid());
+		txFilterByPetName = new TextField("Mascota");
+		txFilterByPetName.addValueChangeListener(e -> refreshGrid());
+		txFilterByDocument = new NumberField("# Documento");
+		txFilterByDocument.setDecimalAllowed(false);
+		txFilterByDocument.addValueChangeListener(e -> refreshGrid());
+		layout.addComponents(txFilterByHistory, txFilterByPetName, txFilterByDocument);
+		return ViewHelper.buildPanel("Filtrar por", layout);
 	}
 
 	private void refreshGrid() {
@@ -169,91 +141,30 @@ public class ClinicHistoryLayout extends VerticalLayout implements View {
 
 	private SerializablePredicate<ClinicHistory> filterGrid() {
 		SerializablePredicate<ClinicHistory> columnPredicate = null;
-		columnPredicate = clinicHistory -> (((ClinicHistory) clinicHistory).getPet().getName().toLowerCase()
-				.contains(txFilterByName.getValue().toLowerCase()) || txFilterByName.getValue().trim().isEmpty());
+		columnPredicate = clinicHistory -> {
+			if (clinicHistory.getRecordCustomId() != null) {
+				return filterByRecordCustomId(clinicHistory) && filterByPetName(clinicHistory)
+						&& filterByOwnerDocument(clinicHistory);
+			} else {
+				return txFilterByHistory.getValue().trim().isEmpty() && filterByPetName(clinicHistory)
+						&& filterByOwnerDocument(clinicHistory);
+			}
+		};
 		return columnPredicate;
 	}
 
-	private void removeEditionTab() {
-		Tab tab = tabSheet.getTab(1);
-		if (tab != null) {
-			tabSheet.removeTab(tab);
-		}
+	private boolean filterByRecordCustomId(ClinicHistory clinicHistory) {
+		return clinicHistory.getRecordCustomId().toString().contains(txFilterByHistory.getValue())
+				|| txFilterByHistory.getValue().trim().isEmpty();
 	}
 
-	private String buildEditionTabTitle(ClinicHistory clinicHistory) {
-		String recordId = clinicHistory.getRecordCustomId() != null ? clinicHistory.getRecordCustomId().toString() : "";
-		return "Historia clínica #" + recordId + " - " + clinicHistory.getPet().getName();
+	private boolean filterByPetName(ClinicHistory clinicHistory) {
+		return clinicHistory.getPet().getName().toLowerCase().contains(txFilterByPetName.getValue().toLowerCase())
+				|| txFilterByPetName.getValue().trim().isEmpty();
 	}
 
-	private void newClinicHistory() {
-		buildEditionView(null);
-	}
-
-	private void updateClinicHistory() {
-		ClinicHistory clinicHistory = getSelected();
-		if (clinicHistory != null) {
-			buildEditionView(clinicHistory);
-		} else {
-			new Notification("No has seleccionado ninguna historia", Notification.Type.TRAY_NOTIFICATION)
-					.show(Page.getCurrent());
-		}
-	}
-
-	private void deleteClinicHistory() {
-		ClinicHistory clinicHistory = getSelected();
-		if (clinicHistory != null) {
-			ConfirmDialog.show(Page.getCurrent().getUI(), "Confirmar", "Está seguro que desea eliminar el registro?",
-					"Aceptar", "Cancelar", e -> {
-						if (e.isConfirmed()) {
-							delete(clinicHistory);
-						}
-					});
-		} else {
-			new Notification("No has seleccionado ninguna historia", Notification.Type.TRAY_NOTIFICATION)
-					.show(Page.getCurrent());
-		}
-	}
-
-	private ClinicHistory getSelected() {
-		ClinicHistory clinicHistory = null;
-		Set<ClinicHistory> clinicHistories = grid.getSelectedItems();
-		if (clinicHistories != null && !clinicHistories.isEmpty()) {
-			clinicHistory = (ClinicHistory) clinicHistories.toArray()[0];
-		}
-		return clinicHistory;
-	}
-
-	private void delete(ClinicHistory clinicHistory) {
-		clinicHistory = ClinicHistory.builder(clinicHistory).enabled(false).build();
-		bll.save(clinicHistory);
-		fillGridData();
-		new Notification("Historia borrada", Notification.Type.TRAY_NOTIFICATION).show(Page.getCurrent());
-	}
-
-	private void save(ClinicHistory clinicHistory) {
-		Company company = getSession().getAttribute(User.class).getCompany();
-		try {
-			if (clinicHistory == null) {
-				clinicHistory = ClinicHistory.builder().company(company).creation(new Date()).enabled(true).build();
-				clinicHistory.validate();
-				bll.save(clinicHistory);
-				new Notification("Historia guardada", Notification.Type.TRAY_NOTIFICATION).show(Page.getCurrent());
-			} else {
-				clinicHistory = ClinicHistory.builder(clinicHistory).build();
-				clinicHistory.validate();
-				bll.save(clinicHistory);
-				new Notification("Historia actualizada", Notification.Type.TRAY_NOTIFICATION).show(Page.getCurrent());
-			}
-			buildListView();
-		} catch (ModelValidationException ex) {
-			log.error(ex);
-			new Notification(ex.getMessage(), Notification.Type.ERROR_MESSAGE).show(Page.getCurrent());
-		} catch (Exception ex) {
-			log.error(ex);
-			new Notification(
-					"Los datos de la historia no pudieron ser salvados, contacte al desarrollador (3007200405)",
-					Notification.Type.ERROR_MESSAGE).show(Page.getCurrent());
-		}
+	private boolean filterByOwnerDocument(ClinicHistory clinicHistory) {
+		return clinicHistory.getPet().getOwner().getDocument().contains(txFilterByDocument.getValue())
+				|| txFilterByDocument.getValue().trim().isEmpty();
 	}
 }

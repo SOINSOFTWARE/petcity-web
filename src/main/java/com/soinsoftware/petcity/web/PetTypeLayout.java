@@ -30,7 +30,7 @@ public class PetTypeLayout extends AbstractEditableLayout<PetType> {
 	private ConfigurableFilterDataProvider<PetType, Void, SerializablePredicate<PetType>> filterDataProvider;
 
 	public PetTypeLayout() throws IOException {
-		super();
+		super("Especies");
 		bll = PetTypeBll.getInstance();
 	}
 
@@ -110,11 +110,11 @@ public class PetTypeLayout extends AbstractEditableLayout<PetType> {
 	}
 
 	private Panel buildFilterPanel() {
-		HorizontalLayout filterLayout = ViewHelper.buildHorizontalLayout(true, true);
+		HorizontalLayout layout = ViewHelper.buildHorizontalLayout(true, true);
 		txFilterByName = new TextField("Nombre");
 		txFilterByName.addValueChangeListener(e -> refreshGrid());
-		filterLayout.addComponent(txFilterByName);
-		return ViewHelper.buildPanel("Filtrar por", filterLayout);
+		layout.addComponent(txFilterByName);
+		return ViewHelper.buildPanel("Filtrar por", layout);
 	}
 
 	private void refreshGrid() {

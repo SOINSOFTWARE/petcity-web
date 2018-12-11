@@ -199,7 +199,7 @@ public class PetCityUI extends UI {
 	private void buildNavigator(ValoMenuLayout root, CssLayout menu, CssLayout menuItemsLayout) {
 		ComponentContainer viewContainer = root.getContentContainer();
 		Navigator navigator = new Navigator(this, viewContainer);
-		navigator.addView(KEY_EVENTS, ReminderLayout.class);
+		navigator.addView(KEY_EVENTS, NotificationLayout.class);
 		navigator.addView(KEY_HISTORIES, ClinicHistoryLayout.class);
 		navigator.addView(KEY_COMPANY_DATA, CompanyLayout.class);
 		navigator.addView(KEY_PET_TYPE, PetTypeLayout.class);

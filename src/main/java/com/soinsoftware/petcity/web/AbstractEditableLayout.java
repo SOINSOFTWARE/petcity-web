@@ -32,12 +32,18 @@ public abstract class AbstractEditableLayout<E> extends VerticalLayout implement
 	protected static final Logger log = Logger.getLogger(AbstractEditableLayout.class);
 
 	private TabSheet tabSheet;
+	private final String pageTitle;
+	
+	public AbstractEditableLayout(String pageTitle) {
+		super();
+		this.pageTitle = pageTitle;
+	}
 
 	@Override
 	public void enter(ViewChangeEvent event) {
 		View.super.enter(event);
 		setMargin(true);
-		addPageTitle("Especies");
+		addPageTitle(pageTitle);
 		addListTab();
 	}
 
@@ -160,7 +166,6 @@ public abstract class AbstractEditableLayout<E> extends VerticalLayout implement
 
 	protected void save(AbstractBll<E, ?> bll, E entity, String caption) {
 		try {
-			((CommonData) entity).validate();
 			bll.save(entity);
 			afterSave(caption);
 		} catch (ModelValidationException ex) {
