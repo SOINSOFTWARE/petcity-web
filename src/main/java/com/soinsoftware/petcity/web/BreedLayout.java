@@ -60,7 +60,7 @@ public class BreedLayout extends AbstractEditableLayout<Breed> {
 	protected AbstractOrderedLayout buildEditionView(Breed breed) {
 		VerticalLayout layout = ViewHelper.buildVerticalLayout(false, false);
 		Panel buttonPanel = buildButtonPanelForEdition(breed);
-		Panel dataPanel = buildEditionPanel(breed);
+		Panel dataPanel = buildEditionComponent(breed);
 		layout.addComponents(buttonPanel, dataPanel);
 		return layout;
 	}
@@ -76,7 +76,7 @@ public class BreedLayout extends AbstractEditableLayout<Breed> {
 	}
 
 	@Override
-	protected Panel buildEditionPanel(Breed breed) {
+	protected Panel buildEditionComponent(Breed breed) {
 		cbPetType = new ComboBox<>("Especie");
 		cbPetType.setSizeFull();
 		fillPetTypeCombo(cbPetType);

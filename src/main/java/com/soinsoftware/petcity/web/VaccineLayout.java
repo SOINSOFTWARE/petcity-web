@@ -49,7 +49,7 @@ public class VaccineLayout extends AbstractEditableLayout<Vaccine> {
 	protected AbstractOrderedLayout buildEditionView(Vaccine vaccine) {
 		VerticalLayout layout = ViewHelper.buildVerticalLayout(false, false);
 		Panel buttonPanel = buildButtonPanelForEdition(vaccine);
-		Panel dataPanel = buildEditionPanel(vaccine);
+		Panel dataPanel = buildEditionComponent(vaccine);
 		layout.addComponents(buttonPanel, dataPanel);
 		return layout;
 	}
@@ -64,7 +64,7 @@ public class VaccineLayout extends AbstractEditableLayout<Vaccine> {
 	}
 
 	@Override
-	protected Panel buildEditionPanel(Vaccine vaccine) {
+	protected Panel buildEditionComponent(Vaccine vaccine) {
 		txName = new TextField("Nombre");
 		txName.setSizeFull();
 		txName.setValue(vaccine != null ? vaccine.getName() : "");

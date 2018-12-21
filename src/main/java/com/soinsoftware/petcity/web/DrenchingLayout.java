@@ -49,7 +49,7 @@ public class DrenchingLayout extends AbstractEditableLayout<Drenching> {
 	protected AbstractOrderedLayout buildEditionView(Drenching drenching) {
 		VerticalLayout layout = ViewHelper.buildVerticalLayout(false, false);
 		Panel buttonPanel = buildButtonPanelForEdition(drenching);
-		Panel dataPanel = buildEditionPanel(drenching);
+		Panel dataPanel = buildEditionComponent(drenching);
 		layout.addComponents(buttonPanel, dataPanel);
 		return layout;
 	}
@@ -64,7 +64,7 @@ public class DrenchingLayout extends AbstractEditableLayout<Drenching> {
 	}
 
 	@Override
-	protected Panel buildEditionPanel(Drenching drenching) {
+	protected Panel buildEditionComponent(Drenching drenching) {
 		txName = new TextField("Nombre");
 		txName.setSizeFull();
 		txName.setValue(drenching != null ? drenching.getName() : "");

@@ -48,7 +48,7 @@ public class PetTypeLayout extends AbstractEditableLayout<PetType> {
 	protected AbstractOrderedLayout buildEditionView(PetType petType) {
 		VerticalLayout layout = ViewHelper.buildVerticalLayout(false, false);
 		Panel buttonPanel = buildButtonPanelForEdition(petType);
-		Panel dataPanel = buildEditionPanel(petType);
+		Panel dataPanel = buildEditionComponent(petType);
 		layout.addComponents(buttonPanel, dataPanel);
 		return layout;
 	}
@@ -63,7 +63,7 @@ public class PetTypeLayout extends AbstractEditableLayout<PetType> {
 	}
 
 	@Override
-	protected Panel buildEditionPanel(PetType petType) {
+	protected Panel buildEditionComponent(PetType petType) {
 		txName = new TextField("Nombre");
 		txName.setSizeFull();
 		txName.setValue(petType != null ? petType.getName() : "");

@@ -3,17 +3,12 @@ package com.soinsoftware.petcity.web;
 
 import org.apache.log4j.Logger;
 import org.hibernate.HibernateException;
-import org.vaadin.dialogs.ConfirmDialog;
 
 import com.soinsoftware.petcity.bll.AbstractBll;
 import com.soinsoftware.petcity.exception.ModelValidationException;
-import com.soinsoftware.petcity.model.AbstractCompanyModel;
-import com.soinsoftware.petcity.model.CommonData;
+import com.soinsoftware.petcity.model.Company;
 import com.soinsoftware.petcity.util.ViewHelper;
-import com.vaadin.navigator.View;
-import com.vaadin.navigator.ViewChangeListener.ViewChangeEvent;
 import com.vaadin.server.FontAwesome;
-import com.vaadin.server.Page;
 import com.vaadin.server.Resource;
 import com.vaadin.ui.AbstractOrderedLayout;
 import com.vaadin.ui.Button;
@@ -25,53 +20,66 @@ import com.vaadin.ui.Panel;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TabSheet.Tab;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window;
 
-@SuppressWarnings("deprecation")
-public abstract class AbstractEditableLayout<E> extends VerticalLayout implements View {
+/**
+ * @author Carlos Rodriguez
+ * @since 19/12/2018
+ *
+ */
+@SuppressWarnings({"deprecation", "rawtypes"})
+public abstract class AbstractModalWindow<E> extends Window {
 
-	private static final long serialVersionUID = -7958396636831213220L;
-	protected static final Logger log = Logger.getLogger(AbstractEditableLayout.class);
-
-	private TabSheet tabSheet;
-	private final String pageTitle;
+	private static final long serialVersionUID = -4960256751591876767L;
+	protected static final Logger log = Logger.getLogger(AbstractModalWindow.class);
 	
-	public AbstractEditableLayout(String pageTitle) {
-		super();
-		this.pageTitle = pageTitle;
-	}
-
-	@Override
-	public void enter(ViewChangeEvent event) {
-		View.super.enter(event);
-		setMargin(true);
-		addPageTitle(pageTitle);
+	private final AbstractBll bll;
+	private final Company company;
+	private TabSheet tabSheet;
+	private final VerticalLayout windowLayout;
+	
+	public AbstractModalWindow(String caption, AbstractBll bll, Company company) {
+		super(caption);
+		this.bll = bll;
+		this.company = company;
+		windowLayout = ViewHelper.buildVerticalLayout(true, true);
+		setModal(true);
+		addPageTitle(caption);
+		setContent(windowLayout);
 		addListTab();
 	}
+	
+	public AbstractBll getBll() {
+		return bll;
+	}
 
+	public Company getCompany() {
+		return company;
+	}
+	
 	protected void addPageTitle(String title) {
 		Label h1 = new Label(title);
 		h1.addStyleName("h1");
-		addComponent(h1);
+		windowLayout.addComponent(h1);
 	}
-
+	
 	private void addListTab() {
 		AbstractOrderedLayout layout = buildListView();
 		tabSheet = new TabSheet();
 		tabSheet.addStyleName("framed");
 		Tab tab = tabSheet.addTab(layout, "Listado");
 		tab.setIcon(FontAwesome.LIST);
-		addComponent(tabSheet);
+		windowLayout.addComponent(tabSheet);
 	}
-
-	protected Panel buildButtonPanelForLists(boolean validateCompany) {
+	
+	protected Panel buildButtonPanelForLists() {
 		HorizontalLayout layout = ViewHelper.buildHorizontalLayout(true, true);
 		Button btNew = buildButtonForNewAction();
-		Button btEdit = buildButtonForEditAction(validateCompany);
-		Button btDelete = buildButtonForDeleteAction(validateCompany);
-		layout.addComponents(btNew, btEdit, btDelete);
+		Button btSelect = buildButtonForSelectAction();
+		layout.addComponents(btNew, btSelect);
 		return ViewHelper.buildPanel(null, layout);
 	}
-
+	
 	protected Panel buildButtonPanelForEdition(E entity) {
 		HorizontalLayout layout = ViewHelper.buildHorizontalLayout(true, true);
 		Button btCancel = buildButtonForCancelAction();
@@ -79,25 +87,19 @@ public abstract class AbstractEditableLayout<E> extends VerticalLayout implement
 		layout.addComponents(btCancel, btSave);
 		return ViewHelper.buildPanel(null, layout);
 	}
-
+	
 	protected Button buildButtonForNewAction() {
 		Button button = ViewHelper.buildButton("Nuevo", FontAwesome.PLUS, "primary");
 		button.addClickListener(e -> newButtonAction());
 		return button;
 	}
 
-	protected Button buildButtonForEditAction(boolean validateCompany) {
-		Button button = ViewHelper.buildButton("Editar", FontAwesome.EDIT, "friendly");
-		button.addClickListener(e -> editButtonAction(validateCompany));
+	protected Button buildButtonForSelectAction() {
+		Button button = ViewHelper.buildButton("Seleccionar", FontAwesome.CHECK, "friendly");
+		button.addClickListener(e -> selectButtonAction());
 		return button;
 	}
-
-	protected Button buildButtonForDeleteAction(boolean validateCompany) {
-		Button button = ViewHelper.buildButton("Borrar", FontAwesome.ERASER, "danger");
-		button.addClickListener(e -> deleteButtonAction(validateCompany));
-		return button;
-	}
-
+	
 	protected Button buildButtonForCancelAction() {
 		Button button = ViewHelper.buildButton("Cancelar", FontAwesome.CLOSE, "danger");
 		button.addClickListener(e -> cancelButtonAction());
@@ -109,62 +111,38 @@ public abstract class AbstractEditableLayout<E> extends VerticalLayout implement
 		button.addClickListener(e -> saveButtonAction(entity));
 		return button;
 	}
-
+	
 	protected void newButtonAction() {
 		showEditionTab(null, "Nuevo", FontAwesome.PLUS);
 	}
 
-	protected void editButtonAction(boolean validateCompany) {
+	protected E selectButtonAction() {
 		E entity = getSelected();
-		if (entity != null) {
-			if (validateCompany) {
-				if (((AbstractCompanyModel) entity).getCompany() == null) {
-					ViewHelper.showNotification("Esta registro no puede ser editada",
-							Notification.Type.TRAY_NOTIFICATION);
-					return;
-				}
-			}
-			showEditionTab(entity, ((CommonData) entity).getTitle(), FontAwesome.EDIT);
-		} else {
+		if (entity == null) {
 			ViewHelper.showNotification("No has seleccionado ningún registro", Notification.Type.TRAY_NOTIFICATION);
 		}
+		return entity;
 	}
-
-	protected void deleteButtonAction(boolean validateCompany) {
-		E entity = getSelected();
-		if (entity != null) {
-			if (validateCompany) {
-				if (((AbstractCompanyModel) entity).getCompany() == null) {
-					ViewHelper.showNotification("Esta registro no puede ser eliminado",
-							Notification.Type.TRAY_NOTIFICATION);
-					return;
-				}
-			}
-			showDeleteConfirmationDialog(entity);
-		} else {
-			ViewHelper.showNotification("No has seleccionado ningún registro", Notification.Type.TRAY_NOTIFICATION);
-		}
-	}
-
-	protected void cancelButtonAction() {
-		Tab tab = tabSheet.getTab(1);
-		if (tab != null) {
-			tabSheet.removeTab(tab);
-		}
-	}
-
+	
 	protected void showEditionTab(E entity, String caption, Resource icon) {
 		AbstractOrderedLayout layout = buildEditionView(entity);
 		addEditionTab(layout, caption, icon);
 	}
-
+	
 	protected void addEditionTab(AbstractOrderedLayout layout, String caption, Resource icon) {
 		cancelButtonAction();
 		Tab tab = tabSheet.addTab(layout, caption);
 		tab.setIcon(icon);
 		tabSheet.setSelectedTab(1);
 	}
-
+	
+	protected void cancelButtonAction() {
+		Tab tab = tabSheet.getTab(1);
+		if (tab != null) {
+			tabSheet.removeTab(tab);
+		}
+	}
+	
 	protected void save(AbstractBll<E, ?> bll, E entity, String caption) {
 		try {
 			bll.save(entity);
@@ -185,18 +163,9 @@ public abstract class AbstractEditableLayout<E> extends VerticalLayout implement
 		cancelButtonAction();
 		ViewHelper.showNotification(caption, Notification.Type.TRAY_NOTIFICATION);
 	}
-
-	private void showDeleteConfirmationDialog(E entity) {
-		ConfirmDialog.show(Page.getCurrent().getUI(), "Confirmar", "Está seguro que desea eliminar el registro?",
-				"Aceptar", "Cancelar", e -> {
-					if (e.isConfirmed()) {
-						delete(entity);
-					}
-				});
-	}
-
+	
 	protected abstract AbstractOrderedLayout buildListView();
-
+	
 	protected abstract AbstractOrderedLayout buildEditionView(E entity);
 
 	protected abstract Panel buildGridPanel();
@@ -204,10 +173,8 @@ public abstract class AbstractEditableLayout<E> extends VerticalLayout implement
 	protected abstract Component buildEditionComponent(E entity);
 
 	protected abstract void fillGridData();
-
+	
 	protected abstract void saveButtonAction(E entity);
-
+	
 	protected abstract E getSelected();
-
-	protected abstract void delete(E entity);
 }

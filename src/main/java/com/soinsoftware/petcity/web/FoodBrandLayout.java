@@ -49,7 +49,7 @@ public class FoodBrandLayout extends AbstractEditableLayout<FoodBrand> {
 	protected AbstractOrderedLayout buildEditionView(FoodBrand foodBrand) {
 		VerticalLayout layout = ViewHelper.buildVerticalLayout(false, false);
 		Panel buttonPanel = buildButtonPanelForEdition(foodBrand);
-		Panel dataPanel = buildEditionPanel(foodBrand);
+		Panel dataPanel = buildEditionComponent(foodBrand);
 		layout.addComponents(buttonPanel, dataPanel);
 		return layout;
 	}
@@ -64,7 +64,7 @@ public class FoodBrandLayout extends AbstractEditableLayout<FoodBrand> {
 	}
 
 	@Override
-	protected Panel buildEditionPanel(FoodBrand foodBrand) {
+	protected Panel buildEditionComponent(FoodBrand foodBrand) {
 		txName = new TextField("Nombre");
 		txName.setSizeFull();
 		txName.setValue(foodBrand != null ? foodBrand.getName() : "");

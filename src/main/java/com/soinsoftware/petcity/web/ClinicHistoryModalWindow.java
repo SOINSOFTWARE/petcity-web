@@ -1,7 +1,6 @@
 package com.soinsoftware.petcity.web;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.Set;
 
 import org.vaadin.ui.NumberField;
@@ -9,12 +8,12 @@ import org.vaadin.ui.NumberField;
 import com.soinsoftware.petcity.bll.ClinicHistoryBll;
 import com.soinsoftware.petcity.model.ClinicHistory;
 import com.soinsoftware.petcity.model.Company;
-import com.soinsoftware.petcity.model.User;
 import com.soinsoftware.petcity.util.ViewHelper;
 import com.vaadin.data.provider.ConfigurableFilterDataProvider;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.server.SerializablePredicate;
 import com.vaadin.ui.AbstractOrderedLayout;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.HorizontalLayout;
@@ -22,27 +21,28 @@ import com.vaadin.ui.Panel;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 
-public class ClinicHistoryLayout extends AbstractEditableLayout<ClinicHistory> {
+public class ClinicHistoryModalWindow extends AbstractModalWindow<ClinicHistory> {
 
-	private static final long serialVersionUID = -5862329317115273275L;
-
-	private final ClinicHistoryBll bll;
-	private Grid<ClinicHistory> grid;
+	private static final long serialVersionUID = -5165673175467412293L;
+	
 	private NumberField txFilterByHistory;
 	private TextField txFilterByPetName;
 	private NumberField txFilterByDocument;
-	private TextField txName;
+	private Grid<ClinicHistory> grid;
 	private ConfigurableFilterDataProvider<ClinicHistory, Void, SerializablePredicate<ClinicHistory>> filterDataProvider;
 
-	public ClinicHistoryLayout() throws IOException {
-		super("Historias clínicas");
-		bll = ClinicHistoryBll.getInstance();
+	public ClinicHistoryModalWindow(String caption, Company company) throws IOException {
+		super(caption, ClinicHistoryBll.getInstance(), company);
+		setHeight("90%");
+		setWidth("90%");
+		setPositionX(20);
+		setPositionY(20);
 	}
 
 	@Override
 	protected AbstractOrderedLayout buildListView() {
 		VerticalLayout layout = ViewHelper.buildVerticalLayout(false, false);
-		Panel buttonPanel = buildButtonPanelForLists(true);
+		Panel buttonPanel = buildButtonPanelForLists();
 		Panel filterPanel = buildFilterPanel();
 		Panel dataPanel = buildGridPanel();
 		layout.addComponents(buttonPanel, filterPanel, dataPanel);
@@ -50,12 +50,9 @@ public class ClinicHistoryLayout extends AbstractEditableLayout<ClinicHistory> {
 	}
 
 	@Override
-	protected AbstractOrderedLayout buildEditionView(ClinicHistory clinicHistory) {
-		VerticalLayout layout = ViewHelper.buildVerticalLayout(false, false);
-		Panel buttonPanel = buildButtonPanelForEdition(clinicHistory);
-		Panel dataPanel = buildEditionComponent(clinicHistory);
-		layout.addComponents(buttonPanel, dataPanel);
-		return layout;
+	protected AbstractOrderedLayout buildEditionView(ClinicHistory entity) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -75,33 +72,22 @@ public class ClinicHistoryLayout extends AbstractEditableLayout<ClinicHistory> {
 	}
 
 	@Override
-	protected Panel buildEditionComponent(ClinicHistory clinicHistory) {
-		txName = new TextField("Nombre");
-		txName.setSizeFull();
-		VerticalLayout layout = ViewHelper.buildVerticalLayout(true, true);
-		layout.setWidth("40%");
-		layout.addComponent(txName);
-		return ViewHelper.buildPanel(null, layout);
+	protected Component buildEditionComponent(ClinicHistory entity) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	@Override
 	protected void fillGridData() {
-		Company company = getSession().getAttribute(User.class).getCompany();
-		ListDataProvider<ClinicHistory> dataProvider = new ListDataProvider<>(bll.select(company));
+		ListDataProvider<ClinicHistory> dataProvider = new ListDataProvider<>(((ClinicHistoryBll) getBll()).select(getCompany()));
 		filterDataProvider = dataProvider.withConfigurableFilter();
 		grid.setDataProvider(filterDataProvider);
 	}
 
 	@Override
-	protected void saveButtonAction(ClinicHistory clinicHistory) {
-		Company company = getSession().getAttribute(User.class).getCompany();
-		String name = txName.getValue();
-		if (clinicHistory == null) {
-			clinicHistory = ClinicHistory.builder().company(company).creation(new Date()).enabled(true).build();
-		} else {
-			clinicHistory = ClinicHistory.builder(clinicHistory).build();
-		}
-		save(bll, clinicHistory, "Historia guardada");
+	protected void saveButtonAction(ClinicHistory entity) {
+		// TODO Auto-generated method stub
+
 	}
 
 	@Override
@@ -113,13 +99,7 @@ public class ClinicHistoryLayout extends AbstractEditableLayout<ClinicHistory> {
 		}
 		return clinicHistory;
 	}
-
-	@Override
-	protected void delete(ClinicHistory clinicHistory) {
-		clinicHistory = ClinicHistory.builder(clinicHistory).enabled(false).build();
-		save(bll, clinicHistory, "Historia borrada");
-	}
-
+	
 	private Panel buildFilterPanel() {
 		HorizontalLayout layout = ViewHelper.buildHorizontalLayout(true, true);
 		txFilterByHistory = new NumberField("# Historia");
@@ -133,12 +113,12 @@ public class ClinicHistoryLayout extends AbstractEditableLayout<ClinicHistory> {
 		layout.addComponents(txFilterByHistory, txFilterByPetName, txFilterByDocument);
 		return ViewHelper.buildPanel("Filtrar por", layout);
 	}
-
+	
 	private void refreshGrid() {
 		filterDataProvider.setFilter(filterGrid());
 		grid.getDataProvider().refreshAll();
 	}
-
+	
 	private SerializablePredicate<ClinicHistory> filterGrid() {
 		SerializablePredicate<ClinicHistory> columnPredicate = null;
 		columnPredicate = clinicHistory -> {
@@ -152,7 +132,7 @@ public class ClinicHistoryLayout extends AbstractEditableLayout<ClinicHistory> {
 		};
 		return columnPredicate;
 	}
-
+	
 	private boolean filterByRecordCustomId(ClinicHistory clinicHistory) {
 		return clinicHistory.getRecordCustomId().toString().contains(txFilterByHistory.getValue())
 				|| txFilterByHistory.getValue().trim().isEmpty();
